@@ -1,0 +1,1 @@
+This is a PET project that implements a telegram bot and a web application with a URL shortening function using a microservice architecture.
