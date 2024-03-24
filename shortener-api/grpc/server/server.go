@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"shortener-api/database"
 	"shortener-api/internal/config"
@@ -35,16 +34,6 @@ func (s *ServerAPI) ShortenURL(ctx context.Context, r *api.ShortenURLRequest) (*
 		return &api.ShortenURLResponse{
 			Result: &api.ShortenURLResponse_Error{
 				Error: "Некорректно введенная ссылка",
-			},
-		}, nil
-	}
-
-	_, err = http.Get(addr)
-
-	if err != nil {
-		return &api.ShortenURLResponse{
-			Result: &api.ShortenURLResponse_Error{
-				Error: "Невозможно получить доступ по указанному адресу",
 			},
 		}, nil
 	}
