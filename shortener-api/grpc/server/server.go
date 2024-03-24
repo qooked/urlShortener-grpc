@@ -36,7 +36,7 @@ func (s *ServerAPI) ShortenURL(ctx context.Context, r *api.ShortenURLRequest) (*
 	database.Postgres.QueryRow("SELECT COUNT(original_url) FROM url WHERE original_url = $1", addr).Scan(&count)
 	fmt.Println(err)
 	if count < 1 {
-		shortKey := config.Get().Url + generateShortKey(addr)
+		shortKey := fmt.Sprintf("%s:%d/", config.CFG.Url, config.CFG.Port) + generateShortKey(addr)
 
 		_, err = database.Postgres.Exec("INSERT INTO url (original_url, shortened_url) VALUES ($1, $2)", addr, shortKey)
 		if err != nil {

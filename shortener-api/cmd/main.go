@@ -9,14 +9,14 @@ import (
 )
 
 func main() {
-	cfg := config.Get()
-	log := setupLogger(cfg.Env)
-	err := database.Init(cfg.DBstring)
+	config.Get()
+	log := setupLogger(config.CFG.Env)
+	err := database.Init(config.CFG.DBstring)
 	if err != nil {
 		log.Error("failed to connect to database", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	app := application.New(log, cfg.Port, cfg.DBstring)
+	app := application.New(log, config.CFG.GRPCConfig.Port, config.CFG.DBstring)
 	app.GRPCserver.Run()
 }
 

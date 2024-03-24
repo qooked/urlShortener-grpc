@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+
+  web:
+    image: shortener-web:1.0
+    container_name: shortener-web
+    ports: 
+      - "8080:8080"
+
+  tg:
+    image: shortener-tg:1.0
+    container_name: shortener-tg
+
+  api:
+    image: shortener-api:1.0
+    container_name: shortener-api
+    ports: 
+      - "50051:50051"
+
+  postgres:
+    image: postgres
+    container_name: links_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=f7kmXohh
+      - POSTGRES_DB=links

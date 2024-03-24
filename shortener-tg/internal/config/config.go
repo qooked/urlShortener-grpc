@@ -2,32 +2,20 @@ package config
 
 import (
 	"os"
-	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	Env        string `yaml:"env" default:"prod"`
-	DBstring   string `yaml:"DBstring" env-required:"true"`
-	BotToken   string `yaml:"bot" env-required:"true"`
-	GRPCConfig `yaml:"gRPC" env-required:"true"`
-	Clients    ClientsConfig `yaml:"clients"`
+	Env      string `yaml:"env" default:"prod"`
+	Addr     string `yaml:"addr" env-required:"true"`
+	BotToken string `yaml:"bot" env-required:"true"`
+	GRPC     GRPC   `yaml:"gRPC" env-required:"true"`
 }
 
-type GRPCConfig struct {
+type GRPC struct {
 	Timeout string `yaml:"timeout" env-default:"5s"`
 	Port    int    `yaml:"port" env-default:"50051"`
-}
-
-type Client struct {
-	Adress       string        `yaml:"adress"`
-	Timeout      time.Duration `yaml:"timeout"`
-	RetriesCount int           `yaml:"retries"`
-}
-
-type ClientsConfig struct {
-	API Client `yaml:"api"`
 }
 
 func Get() *Config {

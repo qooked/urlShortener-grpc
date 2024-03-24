@@ -15,7 +15,7 @@ func main() {
 	cfg := config.Get()
 	log := setupLogger(cfg.Env)
 	timeout := 5 * time.Second
-	client, err := grpc.New(context.Background(), log, "localhost:50051", timeout, 3)
+	client, err := grpc.New(context.Background(), log, fmt.Sprintf("%s:%d", cfg.Addr, cfg.GRPC.Port), timeout, 3)
 	if err != nil {
 		fmt.Println(err)
 	}
