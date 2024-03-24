@@ -27,3 +27,11 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=f7kmXohh
       - POSTGRES_DB=links
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+    ports:
+      - "6379:6379"

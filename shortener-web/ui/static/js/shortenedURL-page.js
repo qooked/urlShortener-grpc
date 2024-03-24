@@ -11,7 +11,6 @@ window.onload = async (e) => {
         response.json().then((data) => {
           let originalURL = data.OriginalURL;
           window.location.href = originalURL;
-          alert(originalURL)
         });
         return;
       }else{

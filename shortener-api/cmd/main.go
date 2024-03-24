@@ -10,12 +10,17 @@ import (
 
 func main() {
 	config.Get()
+
 	log := setupLogger(config.CFG.Env)
-	err := database.Init(config.CFG.DBstring)
+
+	err := database.InitPostgres(config.CFG.DBstring)
 	if err != nil {
 		log.Error("failed to connect to database", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+
+	database.InitRedis(config.CFG.RedisConfig.Port, config.CFG.RedisConfig.Host)
+
 	app := application.New(log, config.CFG.GRPCConfig.Port, config.CFG.DBstring)
 	app.GRPCserver.Run()
 }
