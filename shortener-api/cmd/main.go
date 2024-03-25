@@ -19,6 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	database.PostgresMigrate()
 	database.InitRedis(config.CFG.RedisConfig.Port, config.CFG.RedisConfig.Host)
 
 	app := application.New(log, config.CFG.GRPCConfig.Port, config.CFG.DBstring)

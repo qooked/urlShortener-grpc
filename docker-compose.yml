@@ -1,7 +1,23 @@
 version: "3"
 
 services:
-
+  postgres:
+    image: postgres
+    container_name: links_db
+    ports:
+      - "5400:5432"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=f7kmXohh
+      - POSTGRES_DB=links
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+    ports:
+      - "6379:6379"
   web:
     image: shortener-web:1.0
     container_name: shortener-web
@@ -17,21 +33,6 @@ services:
     container_name: shortener-api
     ports: 
       - "50051:50051"
-
-  postgres:
-    image: postgres
-    container_name: links_db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=f7kmXohh
-      - POSTGRES_DB=links
-  redis:
-    image: redis
-    container_name: redis
-    environment:
-      - REDIS_HOST=127.0.0.1
-      - REDIS_PORT=6379
-    ports:
-      - "6379:6379"
+    depends_on:
+      - postgres
+      - redis
