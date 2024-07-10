@@ -1,42 +1,63 @@
 package main
 
 import (
-	"log/slog"
+	"context"
+	"fmt"
 	"os"
-	"shortener-api/database"
-	"shortener-api/internal/application"
-	"shortener-api/internal/config"
+	"os/signal"
+	"shortener-api/config"
+	cache "shortener-api/internal/adapters/cachedrepository"
+	repo "shortener-api/internal/adapters/repository"
+	"shortener-api/internal/controllers/grpc"
+	uc "shortener-api/internal/usecase"
+	"shortener-api/pkg/logger"
+	"syscall"
 )
 
 func main() {
-	config.Get()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	log := setupLogger(config.CFG.Env)
+	sigCh := make(chan os.Signal, 1)
+	doneCh := make(chan struct{}, 1)
 
-	err := database.InitPostgres(config.CFG.DBstring)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	log := logger.NewLogger()
+	cfg, err := config.Load()
 	if err != nil {
-		log.Error("failed to connect to database", slog.String("error", err.Error()))
-		os.Exit(1)
+		err = fmt.Errorf("config.Load(): %w", err)
+		log.Error(err)
+		return
 	}
 
-	database.PostgresMigrate()
-	database.InitRedis(config.CFG.RedisConfig.Port, config.CFG.RedisConfig.Host)
-
-	app := application.New(log, config.CFG.GRPCConfig.Port, config.CFG.DBstring)
-	app.GRPCserver.Run()
-}
-
-func setupLogger(env string) *slog.Logger {
-	var log *slog.Logger
-	switch env {
-	case "dev":
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	case "prod":
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	case "local":
-		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	default:
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	postgresConn, err := repo.InitPostgres(
+		ctx,
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.Database,
+	)
+	if err != nil {
+		err = fmt.Errorf("repository.InitPostgres(...): %w", err)
+		log.Error(err)
+		return
 	}
-	return log
+
+	repository := repo.NewRepository(postgresConn)
+	redisConn := cache.InitRedis(cfg.Redis.Port, cfg.Redis.Host)
+	cahcedRepository := cache.NewCachedRepository(redisConn, repository)
+	usecase := uc.NewUsecase(cfg.Url, cahcedRepository)
+	srv := grpc.NewServer(log, usecase, cfg.GRPCserver.Host, cfg.GRPCserver.Port)
+
+	go func() {
+		srv.Run()
+	}()
+	select {
+	case <-sigCh:
+		log.Info("Shutting down...")
+	case <-doneCh:
+		log.Info("Server shutdown completed")
+	}
 }
